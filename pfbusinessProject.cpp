@@ -1,5 +1,6 @@
 #include <iostream>
 #include <conio.h>
+#include <fstream>
 
 using namespace std;
 
@@ -7,30 +8,40 @@ using namespace std;
 string adminId = "1001";
 string adminPw  = "123";
 
-string clientId[100]    = {"1", "2", "3"};
-string clientPw[100]    = {"123", "123", "123"};
-string clientName[100]  = {"Ahmad", "Ali", "Aliza"};
-string clientEmail[100] = {"ahmad@example.com", "ali@example.com", "aliza@example.com"};
-string clientPhone[100] = {"+923015600982", "+923896736432", "+923015890765"};
-int t_clients = 3;
+string clientId[100];
+string clientPw[100];
+string clientName[100];
+string clientEmail[100];
+string clientPhone[100];
+int t_clients = 0;
 
-string tourId[100]      = {"1", "2"};
-string tourTitle[100]   = {"North", "South"};
-string tourPlace[100]   = {"Kalaam", "Hunza"};
-string tourDate[100]    = {"12-07-2026", "19-07-2026"};
-int tourT_capacity[100] = {12, 16};
-int t_tours = 2;
+string tourId[100];
+string tourTitle[100];
+string tourPlace[100];
+string tourDate[100];
+int tourT_capacity[100];
+int t_tours = 0;
 
-string enid[10000]       = {"1", "2", "3"};
-string enclientId[10000] = {"1", "1", "2"};
-string entourId[10000]   = {"1", "2", "1"};
-int t_enr = 3;
+string enid[10000];
+string enclientId[10000];
+string entourId[10000];
+int t_enr = 0;
 
 // ===== Function Declarations =====
 void mainMenu();
 void sortTours();
 void deleteEnrollmentsByTour(string tourIdToDelete);
 void adminLogin();
+
+// File handling functions
+void saveTours();
+void loadTours();
+void saveClients();
+void loadClients();
+void saveEnrollments();
+void loadEnrollments();
+void saveAllData();
+void loadAllData();
 
 // admin side
 void adminPanel();
@@ -51,11 +62,118 @@ void cancelEnrollment(string id);
 void viewMyEnrollments(string id);
 void viewMyInfo(int cl_index);
 
+// ===== FILE HANDLING FUNCTIONS =====
+void saveTours()
+{
+    ofstream file("tours.txt");
+    for(int i = 0; i < t_tours; i++)
+    {
+        file << tourId[i] << "|" << tourTitle[i] << "|" << tourPlace[i] << "|"
+             << tourDate[i] << "|" << tourT_capacity[i] << "\n";
+    }
+    file.close();
+}
+
+void loadTours()
+{
+    ifstream file("tours.txt");
+    if(!file.is_open()) { t_tours = 0; return; }
+
+    string line;
+    t_tours = 0;
+    while(getline(file, line) && t_tours < 100)
+    {
+        size_t pos;
+        pos = line.find('|'); tourId[t_tours] = line.substr(0, pos); line = line.substr(pos + 1);
+        pos = line.find('|'); tourTitle[t_tours] = line.substr(0, pos); line = line.substr(pos + 1);
+        pos = line.find('|'); tourPlace[t_tours] = line.substr(0, pos); line = line.substr(pos + 1);
+        pos = line.find('|'); tourDate[t_tours] = line.substr(0, pos); line = line.substr(pos + 1);
+        tourT_capacity[t_tours] = stoi(line);
+        t_tours++;
+    }
+    file.close();
+}
+
+void saveClients()
+{
+    ofstream file("clients.txt");
+    for(int i = 0; i < t_clients; i++)
+    {
+        file << clientId[i] << "|" << clientPw[i] << "|" << clientName[i] << "|"
+             << clientEmail[i] << "|" << clientPhone[i] << "\n";
+    }
+    file.close();
+}
+
+void loadClients()
+{
+    ifstream file("clients.txt");
+    if(!file.is_open()) { t_clients = 0; return; }
+
+    string line;
+    t_clients = 0;
+    while(getline(file, line) && t_clients < 100)
+    {
+        size_t pos;
+        pos = line.find('|'); clientId[t_clients] = line.substr(0, pos); line = line.substr(pos + 1);
+        pos = line.find('|'); clientPw[t_clients] = line.substr(0, pos); line = line.substr(pos + 1);
+        pos = line.find('|'); clientName[t_clients] = line.substr(0, pos); line = line.substr(pos + 1);
+        pos = line.find('|'); clientEmail[t_clients] = line.substr(0, pos); line = line.substr(pos + 1);
+        clientPhone[t_clients] = line;
+        t_clients++;
+    }
+    file.close();
+}
+
+void saveEnrollments()
+{
+    ofstream file("enrollments.txt");
+    for(int i = 0; i < t_enr; i++)
+    {
+        file << enid[i] << "|" << enclientId[i] << "|" << entourId[i] << "\n";
+    }
+    file.close();
+}
+
+void loadEnrollments()
+{
+    ifstream file("enrollments.txt");
+    if(!file.is_open()) { t_enr = 0; return; }
+
+    string line;
+    t_enr = 0;
+    while(getline(file, line) && t_enr < 10000)
+    {
+        size_t pos;
+        pos = line.find('|'); enid[t_enr] = line.substr(0, pos); line = line.substr(pos + 1);
+        pos = line.find('|'); enclientId[t_enr] = line.substr(0, pos); line = line.substr(pos + 1);
+        entourId[t_enr] = line;
+        t_enr++;
+    }
+    file.close();
+}
+
+void saveAllData()
+{
+    saveTours();
+    saveClients();
+    saveEnrollments();
+}
+
+void loadAllData()
+{
+    loadTours();
+    loadClients();
+    loadEnrollments();
+}
+
 // ===== MAIN =====
 int main()
 {
+    loadAllData();
     sortTours();
     mainMenu();
+    saveAllData();
     return 0;
 }
 
@@ -187,7 +305,8 @@ void createTour()
     cout << "Enter the tour Capacity: "; cin >> tourT_capacity[t_tours]; cin.ignore();
     cout << "Enter the tour Date: ";     getline(cin, tourDate[t_tours]);
     t_tours++;
-    sortTours();  // SORTING 
+    sortTours();  // SORTING
+    saveAllData();
     cout << "Tour Added!\n\nPress any key...";
     getch();
 }
@@ -218,11 +337,10 @@ void deleteTour()
         tourDate[i]       = tourDate[i + 1];
     }
     t_tours--;
+    saveAllData();
     cout << "\nPress any key...";
     getch();
 }
-
-// ===== UPDATE TOUR =====
 void updateTour()
 {
     if(t_tours == 0) { cout << "No Tours Existed!\n\n"; getch(); return; }
@@ -241,11 +359,10 @@ void updateTour()
     cout << "Enter the new tour Capacity: "; cin >> tourT_capacity[index]; cin.ignore();
     cout << "Enter the new tour Date: ";     getline(cin, tourDate[index]);
     sortTours();
+    saveAllData();
     cout << "Tour updated successfully!\n\nPress any key...";
     getch();
 }
-
-// ===== VIEW TOURS =====
 void viewTours()
 {
     cout << "ID\tTitle\tPlace\tDate\tCapacity\tEnrolments\n\n";
@@ -318,11 +435,10 @@ void deleteUser()
         clientPw[i]    = clientPw[i + 1];
     }
     t_clients--;
+    saveAllData();
     cout << "\nPress any key to continue...";
     getch();
 }
-
-// ===== CLIENT PANEL =====
 void clientPanel()
 {
     while(true)
@@ -361,11 +477,10 @@ void registerClient()
     cout << "Enter your phone no.: "; getline(cin, clientPhone[t_clients]);
     cout << "Enter Password: ";       getline(cin, clientPw[t_clients]);
     t_clients++;
+    saveAllData();
     cout << "Registered Successfully!\n\nPress any key...";
     getch();
 }
-
-// ===== CLIENT LOGIN =====
 void clientLogin()
 {
     string id, password;
@@ -452,6 +567,7 @@ void enrollTour(string id)
     enclientId[t_enr] = id;
     entourId[t_enr]   = t_id;
     t_enr++;
+    saveAllData();
     cout << "You are Successfully Enrolled For the Tour!\n\n";
 }
 
@@ -474,6 +590,7 @@ void cancelEnrollment(string id)
         entourId[k]   = entourId[k + 1];
     }
     t_enr--;
+    saveAllData();
     cout << "Enrollment Cancelled Successfully!\n\n";
 }
 
